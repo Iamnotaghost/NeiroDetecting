@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  classifier-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: product-classifier
+    restart: unless-stopped
+    ports:
+      - "5000:5000"  # API
+      - "9090:9090"  # Prometheus метрики
+    volumes:
+      - ./models:/app/models:ro  # Монтируем модели только для чтения
+      - ./logs:/app/logs  # Монтируем логи
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - ENABLE_ACCESS_LOGS=true
+      - ENABLE_METRICS=false
+      - MAX_BATCH_SIZE=200
+      - ENABLE_CACHING=true
+      - CACHE_TTL=3600
+    healthcheck:
+      test: ["CMD", "/app/docker-healthcheck.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  # Опциональный сервис для мониторинга (Prometheus)
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    depends_on:
+      - classifier-api
+
+volumes:
+  prometheus_data:

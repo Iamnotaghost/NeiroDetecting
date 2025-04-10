@@ -1,0 +1,7 @@
+{
+  "macro_f1": 0.8572583325556116,
+  "model_type": "logreg",
+  "num_features": 15006,
+  "num_samples": 28000,
+  "num_classes": 18
+}
